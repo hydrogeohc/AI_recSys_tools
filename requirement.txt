@@ -2,6 +2,6 @@ pytesseract
 pdf2image 
 opencv-python 
 numpy
-
-
-
+sentence-transformers
+PyPDF2
+chromadb
