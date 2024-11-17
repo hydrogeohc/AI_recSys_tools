@@ -1,6 +1,16 @@
 import re
 from PyPDF2 import PdfReader
+import chromadb
+import uuid
+from sentence_transformers import SentenceTransformer
 
+# Initialize ChromaDB client and collection
+def init_chromadb(collection_name="keyword_extracted_sentences"):
+    client = chromadb.Client()
+    collection = client.create_collection(collection_name)
+    return client, collection
+
+# Extract sentences from PDF that match given keywords
 def extract_sentences_from_pdf(pdf_path, keywords, case_sensitive=False):
     # Read the PDF file
     reader = PdfReader(pdf_path)
@@ -29,12 +39,47 @@ def extract_sentences_from_pdf(pdf_path, keywords, case_sensitive=False):
     
     return extracted_sentences
 
-# Example usage
-pdf_path = "path/to/your/pdf/file.pdf"
-keywords = ["natural language processing", "computer science", "artificial intelligence"]
+# Process extracted sentences and add them to ChromaDB
+def add_sentences_to_chromadb(pdf_path, sentences, collection):
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    
+    for i, sentence in enumerate(sentences):
+        # Generate embedding for the sentence
+        embedding = model.encode(sentence)
+        
+        # Create a unique ID for each sentence
+        unique_id = f"{pdf_path}_sentence_{i}"
+        
+        # Add to ChromaDB
+        collection.add(
+            embeddings=[embedding.tolist()],
+            documents=[sentence],
+            metadatas=[{"source": pdf_path, "sentence_id": i}],
+            ids=[unique_id]
+        )
+        print(f"Processed and stored sentence {i + 1} from {pdf_path}")
 
-extracted_content = extract_sentences_from_pdf(pdf_path, keywords, case_sensitive=False)
+# Main execution
+if __name__ == "__main__":
+    pdf_path = "../PDF_dir/2411.04578v1.pdf"
+    keywords = ["natural language processing", "computer science", "artificial intelligence"]
 
-print("Extracted sentences:")
-for sentence in extracted_content:
-    print("- " + sentence)
+    # Extract sentences containing the keywords
+    extracted_content = extract_sentences_from_pdf(pdf_path, keywords, case_sensitive=False)
+
+    if extracted_content:
+        print("Extracted sentences:")
+        for sentence in extracted_content:
+            print("- " + sentence)
+        
+        # Initialize ChromaDB client and collection
+        client, collection = init_chromadb()
+
+        # Add extracted sentences to ChromaDB
+        add_sentences_to_chromadb(pdf_path, extracted_content, collection)
+
+        # Optional: Save the database to a file (use save_db function if needed)
+        # save_db(collection)
+
+    else:
+        print("No sentences found with the specified keywords.")

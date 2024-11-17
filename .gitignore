@@ -1,0 +1,6 @@
+*.csv
+/PDF_dir/
+/output_data/
+/test_AI/
+*.json
+*.pkl
