@@ -9,6 +9,7 @@ import pytesseract
 import cv2
 from pdf2image import convert_from_path
 import os
+from datetime import datetime
 
 # Initialize ChromaDB client and collection
 def init_chromadb(collection_name="data_collection"):
@@ -106,11 +107,14 @@ def process_pdf_to_chromadb(pdf_path, collection):
         # Create a unique ID for each chunk
         unique_id = f"{pdf_path}_chunk_{i}"
 
+        # Add a timestamp to the metadata
+        timestamp = datetime.now().isoformat()
+
         # Store in ChromaDB
         collection.add(
             embeddings=[embedding.tolist()],
             documents=[chunk],
-            metadatas=[{"source": pdf_path, "chunk_id": i}],
+            metadatas=[{"source": pdf_path, "chunk_id": i, "timestamp": timestamp}],
             ids=[unique_id]
         )
         print(f"Processed and stored chunk {i + 1} from {pdf_path}")
@@ -148,13 +152,16 @@ def detect_tables_and_figures_in_pdf(pdf_path, collection):
         ocr_text = pytesseract.image_to_string(image)
         unique_id = f"{pdf_path}_page_{i}_ocr"
 
+        # Add a timestamp to the metadata
+        timestamp = datetime.now().isoformat()
+
         # Add OCR text and metadata to ChromaDB
         if ocr_text.strip():
             embedding = model.encode(ocr_text)
             collection.add(
                 embeddings=[embedding.tolist()],
                 documents=[ocr_text],
-                metadatas=[{"source": pdf_path, "page_num": i, "content_type": "OCR"}],
+                metadatas=[{"source": pdf_path, "page_num": i, "content_type": "OCR", "timestamp": timestamp}],
                 ids=[unique_id]
             )
             print(f"Processed and stored OCR text for page {i + 1}")
@@ -162,7 +169,6 @@ def detect_tables_and_figures_in_pdf(pdf_path, collection):
 # Main execution
 if __name__ == "__main__":
     client, collection = init_chromadb()
-
 
     pdf_file_path = "../PDF_dir/2411.04578v1.pdf"
     
@@ -174,5 +180,3 @@ if __name__ == "__main__":
 
     # To load the database in a future session, uncomment the following:
     # loaded_collection = load_db(client)
-
-

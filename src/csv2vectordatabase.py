@@ -4,6 +4,7 @@ import chromadb
 import uuid
 import json
 import numpy as np
+from datetime import datetime
 
 # Initialize ChromaDB client and collection
 def init_chromadb(collection_name="csv_data"):
@@ -77,11 +78,14 @@ def process_csv(file_path):
         # Create a unique ID for each row
         unique_id = str(uuid.uuid4())
 
+        # Add a timestamp to the metadata
+        timestamp = datetime.now().isoformat()
+
         # Store in ChromaDB
         collection.add(
             embeddings=[embedding.tolist()],
             documents=[text_content],
-            metadatas=[row.to_dict()],
+            metadatas=[{**row.to_dict(), "timestamp": timestamp}],
             ids=[unique_id]
         )
         print(f"Processed and stored row {index + 1}")
@@ -112,6 +116,7 @@ if __name__ == "__main__":
 
     # Save the database to a file
     save_db(collection)
+
 
     # To load the database in a future session, uncomment the following:
     # loaded_collection = load_db(client)

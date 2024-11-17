@@ -5,6 +5,7 @@ import os
 from transformers import pipeline
 import json
 import numpy as np
+from datetime import datetime
 
 # Initialize ChromaDB client and collection
 def init_chromadb():
@@ -76,11 +77,14 @@ def process_pdfs_in_directory(directory, collection):
                 # Generate embedding for each chunk
                 embedding = model.encode(chunk)
 
+                # Add timestamp to metadata
+                timestamp = datetime.now().isoformat()
+
                 # Store in ChromaDB
                 collection.add(
                     embeddings=[embedding.tolist()],
                     documents=[chunk],
-                    metadatas=[{"source": filename, "chunk_id": i}],
+                    metadatas=[{"source": filename, "chunk_id": i, "timestamp": timestamp}],
                     ids=[f"{filename}_chunk_{i}"]
                 )
             print(f"Processed and stored: {filename}")

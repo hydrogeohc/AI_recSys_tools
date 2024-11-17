@@ -3,6 +3,7 @@ from PyPDF2 import PdfReader
 import chromadb
 import uuid
 from sentence_transformers import SentenceTransformer
+from datetime import datetime
 
 # Initialize ChromaDB client and collection
 def init_chromadb(collection_name="keyword_extracted_sentences"):
@@ -50,11 +51,14 @@ def add_sentences_to_chromadb(pdf_path, sentences, collection):
         # Create a unique ID for each sentence
         unique_id = f"{pdf_path}_sentence_{i}"
         
+        # Add a timestamp to the metadata
+        timestamp = datetime.now().isoformat()
+
         # Add to ChromaDB
         collection.add(
             embeddings=[embedding.tolist()],
             documents=[sentence],
-            metadatas=[{"source": pdf_path, "sentence_id": i}],
+            metadatas=[{"source": pdf_path, "sentence_id": i, "timestamp": timestamp}],
             ids=[unique_id]
         )
         print(f"Processed and stored sentence {i + 1} from {pdf_path}")

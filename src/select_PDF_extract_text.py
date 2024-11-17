@@ -5,6 +5,7 @@ import uuid
 import json
 import numpy as np
 import fitz  # PyMuPDF
+from datetime import datetime
 
 # Initialize ChromaDB client and collection
 def init_chromadb(collection_name="data_collection"):
@@ -102,11 +103,14 @@ def process_pdf_to_chromadb(pdf_path, collection):
         # Create a unique ID for each chunk
         unique_id = f"{pdf_path}_chunk_{i}"
 
+        # Add a timestamp to the metadata
+        timestamp = datetime.now().isoformat()
+
         # Store in ChromaDB
         collection.add(
             embeddings=[embedding.tolist()],
             documents=[chunk],
-            metadatas=[{"source": pdf_path, "chunk_id": i}],
+            metadatas=[{"source": pdf_path, "chunk_id": i, "timestamp": timestamp}],
             ids=[unique_id]
         )
         print(f"Processed and stored chunk {i + 1} from {pdf_path}")
@@ -134,11 +138,14 @@ def process_csv(file_path, collection):
         # Create a unique ID for each row
         unique_id = str(uuid.uuid4())
 
+        # Add a timestamp to the metadata
+        timestamp = datetime.now().isoformat()
+
         # Store in ChromaDB
         collection.add(
             embeddings=[embedding.tolist()],
             documents=[text_content],
-            metadatas=[row.to_dict()],
+            metadatas=[{**row.to_dict(), "timestamp": timestamp}],
             ids=[unique_id]
         )
         print(f"Processed and stored row {index + 1}")
