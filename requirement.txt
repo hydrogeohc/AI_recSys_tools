@@ -6,6 +6,7 @@ numpy
 sentence-transformers
 PyPDF2
 chromadb
+pymongo
 matplotlib
 transformers
 fitz
