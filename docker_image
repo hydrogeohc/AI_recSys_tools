@@ -1,0 +1,32 @@
+# Use an Ubuntu-based Python image
+FROM ubuntu:22.04
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Update and install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-distro-info \
+    python3-debian \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install a compatible version of setuptools
+RUN python3 -m pip install --no-cache-dir --upgrade pip && \
+    python3 -m pip install --no-cache-dir setuptools==65.5.1
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the required packages
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# Set the default command to run when the container starts
+CMD ["python3", "main.py"]
